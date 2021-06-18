@@ -1,0 +1,88 @@
+{% extends 'layout.html' %}
+
+{% block style %}
+
+{% endblock %}
+
+{% block body %}
+
+    <div class="container" id="ListApp">
+        <div class="row">
+            <div class="col">
+                <div class="card mt-3 shadow">
+                    <div class="card-body">
+                        <div>
+                            <a class="btn btn-dark" href="{% url 'index' %}">
+                                Новый полигон
+                            </a>
+                        </div>
+                        <hr>
+                        {% for object in object_list %}
+                            <div class="card mb-1">
+                                <div class="card-body">
+                                    <div class="d-flex">
+                                        <div class="flex-grow-1">
+                                            <span class="text-black-50">id: {{ object.id }}</span>
+                                            <br>
+                                            {{ object.name }}
+                                            <br>
+                                            <a class="btn btn-outline-dark mt-3" href="{% url 'polygon' object.id %}">
+                                                Перейти к полигону
+                                            </a>
+                                        </div>
+                                        <div class="">
+                                            <canvas id="canvas_{{ object.id }}"
+                                                    class="border border-secondary ms-2 shadow-sm"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <h4>Ничего не найдено</h4>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% include 'pagination.html' %}
+    </div>
+
+{% endblock %}
+
+{% block script %}
+    <script>
+        let listApp = new Vue({
+            el: "#ListApp",
+            mounted() {
+                this.initPols();
+            },
+            data: {
+                polygons: {{ js_pols|safe }}
+            },
+            computed: {},
+            watch: {},
+            methods: {
+                initPols() {
+                    let canvas = null;
+                    let ctx = null;
+
+                    this.polygons.forEach(item => {
+                        canvas = document.getElementById("canvas_" + item.id);
+                        if (canvas === null)
+                            return
+                        ctx = canvas.getContext("2d");
+                        ctx.strokeStyle = '#32a852';
+                        canvas.width = 500;
+                        canvas.height = 500;
+                        ctx.beginPath();
+                        item.points.forEach(point_arr => {
+                            ctx.lineTo(point_arr[0], point_arr[1])
+                        })
+                        ctx.closePath();
+                        ctx.stroke();
+                    })
+                }
+            }
+        })
+    </script>
+{% endblock %}

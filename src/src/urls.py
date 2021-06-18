@@ -4,6 +4,7 @@ from src.core_app import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', views.Index.as_view(), name="index"),
-    path('<id>', views.Index.as_view(), name="index"),
+    path('create/', views.CreateUpdate.as_view(), name="index"),
+    path('polygon/<id>', views.CreateUpdate.as_view(), name="polygon"),
+    path('', views.PolygonList.as_view(), name="list"),
 ]
