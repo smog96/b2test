@@ -1,0 +1,92 @@
+{% extends 'layout.html' %}
+
+{% block style %}
+    <style>
+        .canvas {
+            border: 1px solid black;
+            padding-top: 50px;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+
+    <div class="container" id="App">
+        <div class="row">
+            <div class="col">
+                <div class="card mt-3 shadow">
+                    <div class="card-body text-center">
+                        {% if message %}
+                            <div class="row">
+                                <div class="col">
+                                    <div class="alert alert-info shadow-sm">
+                                        {{ message }}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <div class="row">
+                            <div class="col-8">
+                                <div class="d-flex">
+                                    <div class="flex-fill" v-text="state_msg"></div>
+                                    <div class="flex-fill" v-text="currX + ', ' + currY"></div>
+                                </div>
+
+                                <canvas id="polygon"
+                                        @mousedown="canvasPoint"
+                                        @mousemove="move"
+                                        class="canvas shadow"></canvas>
+                            </div>
+                            <div class="col-2 d-flex flex-fill justify-content-center">
+                                <hr class="my-5">
+                                <form method="post">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="pol" :value="pol">
+                                    <input type="hidden" name="last_point" :value="last_point">
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" :disabled="last_point == null"
+                                               type="checkbox"
+                                               v-model="for_save"
+                                               name="for_save"
+                                               :value="for_save"
+                                               id="flexCheckDefault">
+                                        <label class="form-check-label" for="flexCheckDefault">
+                                            Сохранить полигон?
+                                        </label>
+                                    </div>
+                                    <div v-if="for_save" class="mb-2">
+                                        <label for="polygon_name">Название полигона</label>
+                                        <input type="text" id="polygon_name"
+                                               class="form-control"
+                                               :required="for_save"
+                                               name="polygon_name">
+                                    </div>
+                                    <button class="btn btn-success ms-auto"
+                                            :disabled="last_point == null"
+                                            type="submit">
+                                        Отправить данные
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer d-flex">
+                        <button v-if="pol.length < 4"
+                                disabled
+                                class="btn btn-outline-primary me-auto">
+                            <span v-text="'Указано точек ' + pol.length + ' из мин. 4'"></span>
+                        </button>
+                        <button v-else class="btn btn-dark me-auto" @click="canvasComplete">
+                            Закончить фигуру и указать точку
+                        </button>
+                        <button class="btn btn-danger me-2" @click="canvasClear">
+                            Сбросить
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
