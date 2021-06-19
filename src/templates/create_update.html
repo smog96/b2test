@@ -72,7 +72,7 @@
                             </div>
                             <div class="col-8 text-center">
                                 <div class="d-flex">
-                                    <div class="flex-fill" v-text="state_msg"></div>
+                                    <div class="flex-fill" :class="state_msg_class" v-text="state_msg"></div>
                                     <div class="flex-fill" v-text="currX + ', ' + currY"></div>
                                 </div>
                                 <canvas id="polygon"
@@ -117,7 +117,8 @@
                 testMsg: 'Hello',
                 state_msg: null,
                 for_save: false,
-                info_class: "text-danger"
+                info_class: "text-danger",
+                state_msg_class: "text-dark"
             },
             computed: {},
             watch: {
@@ -136,6 +137,7 @@
             methods: {
                 canvasPoint(event) {
                     if (this.pol.length > 9 && !this.is_last_point) {
+                        this.state_msg_class = "text-danger"
                         this.state_msg = "Много точек!"
                         return null
                     }
