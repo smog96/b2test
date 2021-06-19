@@ -93,7 +93,7 @@ class PolygonList(ListView):
         Контроллер списка полигонов
     """
     template_name = 'polygon_list.html'
-    queryset = Polygon.objects.all()
+    queryset = Polygon.objects.all().order_by('id')
     paginate_by = 15
     model = Polygon
     extra_context = {
