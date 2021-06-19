@@ -21,9 +21,9 @@
                         </a>
                         <div class="row">
                             <div class="col d-flex">
-                                {% if message %}
+                                {% if last_check %}
                                     <div class="alert alert-info shadow-sm">
-                                        {{ message }}
+                                        {{ last_check }}
                                     </div>
                                 {% endif %}
                             </div>
@@ -42,10 +42,12 @@
                             </div>
                             <div class="col-2 d-flex flex-fill justify-content-center">
                                 <hr class="my-5">
-                                <form method="post" action="{% url 'index' %}">
+                                <form method="post" action="{% url 'polygon_manager' %}">
                                     {% csrf_token %}
                                     <input type="hidden" name="pol" :value="pol">
                                     <input type="hidden" name="last_point" :value="last_point">
+                                    <input type="hidden" name="object_id"
+                                           value="{{ object.id|default_if_none:'null' }}">
                                     {% if not object %}
                                         <div class="form-check mb-2">
                                             <input class="form-check-input"
@@ -64,7 +66,7 @@
                                             <input type="text" id="polygon_name"
                                                    class="form-control"
                                                    :required="for_save"
-                                                   :disabled="last_point == null"
+                                                   :disabled="!for_save"
                                                    name="polygon_name">
                                         </div>
                                     {% endif %}
@@ -77,19 +79,20 @@
                             </div>
                         </div>
                     </div>
-                    <div class="card-footer d-flex">
-                        <button v-if="pol.length < 4"
-                                disabled
-                                class="btn btn-outline-primary me-auto">
-                            <span v-text="'Указано точек ' + pol.length + ' из мин. 4'"></span>
-                        </button>
-                        <button v-else class="btn btn-dark me-auto" @click="canvasComplete">
-                            Закончить фигуру и указать точку
-                        </button>
-                        <button class="btn btn-danger me-2" @click="canvasClear">
-                            Сбросить
-                        </button>
-                    </div>
+                    {% if not object %}
+                        <div class="card-footer d-flex">
+                            <button v-if="pol.length < 4"
+                                    disabled
+                                    class="btn btn-outline-primary me-auto">
+                                <span v-text="'Указано точек ' + pol.length + ' из мин. 4'"></span>
+                            </button>
+                            {% if not object %}
+                                <button v-if="pol.length > 3" class="btn btn-dark me-auto" @click="canvasComplete">
+                                    Закончить фигуру и указать точку
+                                </button>
+                            {% endif %}
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -143,12 +146,17 @@
                     let x = event.offsetX;
                     let y = event.offsetY - 50;
                     this.vueCanvas.moveTo(x, y);
-                    this.is_last_point
-                        ? this.last_point = [x, y]
-                        : this.pol.push([x, y])
-                    console.log(this.pol)
-                    this.vueCanvas.arc(x, y, 1, 0, 360, false);
-                    this.vueCanvas.stroke();
+                    if (this.is_last_point) {
+                        if (this.last_point != null)
+                            return
+                        this.last_point = [x, y]
+                        this.vueCanvas.arc(x, y, 1, 0, 360, false);
+                        this.vueCanvas.stroke();
+                    } else {
+                        this.pol.push([x, y])
+                        this.vueCanvas.arc(x, y, 1, 0, 360, false);
+                        this.vueCanvas.stroke();
+                    }
                 },
                 move(event) {
                     this.prevX = this.currX;
@@ -163,9 +171,6 @@
                     this.vueCanvas.closePath();
                     this.vueCanvas.stroke();
                 },
-                canvasClear() {
-                    window.location.reload(true);
-                }
             },
         })
     </script>

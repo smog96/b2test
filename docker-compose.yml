@@ -11,8 +11,6 @@ services:
             POSTGRES_PASSWORD: postgres
         ports:
             - 5432:5432
-        networks:
-            - application_network
 
     application:
         build: .
@@ -20,7 +18,6 @@ services:
             - ./src:/app
         command: [ "sh", "-c", "python manage.py migrate &&
              python manage.py runserver 0.0.0.0:8000" ]
-        user: ${UID:-0}:${GID:-0}
         ports:
             - 8000:8000
         restart: always
@@ -28,12 +25,6 @@ services:
             DJANGO_DEBUG: "True"
         depends_on:
             - postgres
-        networks:
-            - application_network
 
 volumes: 
     postgres-data:
-
-networks:
-    application_network:
-        driver: bridge

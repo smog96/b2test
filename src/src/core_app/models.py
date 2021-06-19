@@ -1,11 +1,25 @@
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
+from django.urls import reverse
 
 
 class Polygon(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     points = ArrayField(ArrayField(models.IntegerField(), size=2), size=10)
     name = models.CharField("Наименование", max_length=255)
+
+    def get_absolute_url(self):
+        return reverse('polygon', kwargs={'id': self.id})
+
+    @classmethod
+    def get_pols_js(cls, object_list) -> list:
+        return [
+            {
+                'id': x.id,
+                'points': x.points
+            } for x in object_list
+        ]
+
 
     def __check_point(self, check_point: [int, int]) -> bool:
         x, y = int(check_point[0]), int(check_point[1])
