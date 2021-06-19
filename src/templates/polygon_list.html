@@ -22,11 +22,13 @@
                                 <div class="card-body">
                                     <div class="d-flex">
                                         <div class="flex-grow-1">
+                                            <b>Название</b>: {{ object.name }}
+                                            <br>
+                                            <b>Количество углов</b>: {{ object.point_count }}
+                                            <br>
                                             <span class="text-black-50">id: {{ object.id }}</span>
                                             <br>
-                                            {{ object.name }}
-                                            <br>
-                                            <a class="btn btn-outline-dark mt-3" href="{% url 'polygon' object.id %}">
+                                            <a class="btn btn-outline-danger mt-3" href="{% url 'polygon' object.id %}">
                                                 Перейти к полигону
                                             </a>
                                         </div>
@@ -71,12 +73,12 @@
                         if (canvas === null)
                             return
                         ctx = canvas.getContext("2d");
-                        ctx.strokeStyle = '#32a852';
-                        canvas.width = 500;
-                        canvas.height = 500;
+                        canvas.width = 200;
+                        canvas.height = 200;
                         ctx.beginPath();
+                        ctx.strokeStyle = 'rgb(182,43,43)';
                         item.points.forEach(point_arr => {
-                            ctx.lineTo(point_arr[0], point_arr[1])
+                            ctx.lineTo(point_arr[0] * 0.4, point_arr[1] * 0.4)
                         })
                         ctx.closePath();
                         ctx.stroke();

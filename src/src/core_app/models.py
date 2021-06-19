@@ -8,6 +8,10 @@ class Polygon(models.Model):
     points = ArrayField(ArrayField(models.IntegerField(), size=2), size=10)
     name = models.CharField("Наименование", max_length=255)
 
+    @property
+    def point_count(self):
+        return len(self.points)
+
     def get_absolute_url(self):
         return reverse('polygon', kwargs={'id': self.id})
 
@@ -32,10 +36,10 @@ class Polygon(models.Model):
                 res = not res
         return res
 
-    def in_polygon(self, check_point: [int, int]) -> str:
+    def in_polygon(self, check_point: [int, int]):
         if self.__check_point(check_point):
-            return "Точка внутри полигона"
-        return "Точка вне полигона"
+            return "Точка внутри полигона", "secondary"
+        return "Точка вне полигона", "danger"
 
     class Meta:
         db_table = 'polygon'

@@ -1,47 +1,38 @@
 {% extends 'layout.html' %}
 
-{% block style %}
-    <style>
-        .canvas {
-            border: 1px solid black;
-            padding-top: 50px;
-        }
-    </style>
-{% endblock %}
-
 {% block body %}
 
     <div class="container" id="App">
         <div class="row">
             <div class="col">
                 <div class="card mt-3 shadow">
-                    <div class="card-body text-center">
-                        <a href="{% url 'list' %}" class="btn btn-dark">
-                            Список полигонов
-                        </a>
+                    <div class="card-body">
+                        {% if last_check %}
+                            <div class="alert alert-{{ last_check.1 }} shadow-sm">
+                                {{ last_check.0 }}
+                            </div>
+                        {% endif %}
                         <div class="row">
-                            <div class="col d-flex">
-                                {% if last_check %}
-                                    <div class="alert alert-info shadow-sm">
-                                        {{ last_check }}
-                                    </div>
+                            <div class="col-4">
+                                {% if object %}
+                                    <a href="{% url 'create' %}" class="btn btn-outline-danger">
+                                        Создать полигон
+                                    </a>
                                 {% endif %}
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-8">
-                                <div class="d-flex">
-                                    <div class="flex-fill" v-text="state_msg"></div>
-                                    <div class="flex-fill" v-text="currX + ', ' + currY"></div>
-                                </div>
-                                <canvas id="polygon"
-                                        @mousedown="canvasPoint"
-                                        @mousemove="move"
-                                        class="canvas shadow"></canvas>
-                            </div>
-                            <div class="col-2 d-flex flex-fill justify-content-center">
-                                <hr class="my-5">
+                                <a href="{% url 'list' %}" class="btn btn-dark">
+                                    Список полигонов
+                                </a>
+                                <hr>
+                                {% if not object %}
+                                    <div :class="info_class" v-text="'Указано точек ' + pol.length + ' из мин. 4 (макс. 10)'"></div>
+                                    {% if not object %}
+                                        <button v-if="pol.length > 3" class="btn btn-dark me-auto"
+                                                @click="canvasComplete">
+                                            Закончить фигуру и указать точку
+                                        </button>
+                                    {% endif %}
+                                    <hr>
+                                {% endif %}
                                 <form method="post" action="{% url 'polygon_manager' %}">
                                     {% csrf_token %}
                                     <input type="hidden" name="pol" :value="pol">
@@ -49,6 +40,7 @@
                                     <input type="hidden" name="object_id"
                                            value="{{ object.id|default_if_none:'null' }}">
                                     {% if not object %}
+
                                         <div class="form-check mb-2">
                                             <input class="form-check-input"
                                                    :disabled="last_point == null"
@@ -61,6 +53,7 @@
                                                 Сохранить полигон?
                                             </label>
                                         </div>
+
                                         <div class="mb-2">
                                             <label for="polygon_name">Название полигона</label>
                                             <input type="text" id="polygon_name"
@@ -70,29 +63,25 @@
                                                    name="polygon_name">
                                         </div>
                                     {% endif %}
-                                    <button class="btn btn-success ms-auto"
+                                    <button class="btn btn-danger ms-auto"
                                             :disabled="last_point == null"
                                             type="submit">
                                         Отправить данные
                                     </button>
                                 </form>
                             </div>
+                            <div class="col-8 text-center">
+                                <div class="d-flex">
+                                    <div class="flex-fill" v-text="state_msg"></div>
+                                    <div class="flex-fill" v-text="currX + ', ' + currY"></div>
+                                </div>
+                                <canvas id="polygon"
+                                        @mousedown="canvasPoint"
+                                        @mousemove="move"
+                                        class="border border-dark shadow"></canvas>
+                            </div>
                         </div>
                     </div>
-                    {% if not object %}
-                        <div class="card-footer d-flex">
-                            <button v-if="pol.length < 4"
-                                    disabled
-                                    class="btn btn-outline-primary me-auto">
-                                <span v-text="'Указано точек ' + pol.length + ' из мин. 4'"></span>
-                            </button>
-                            {% if not object %}
-                                <button v-if="pol.length > 3" class="btn btn-dark me-auto" @click="canvasComplete">
-                                    Закончить фигуру и указать точку
-                                </button>
-                            {% endif %}
-                        </div>
-                    {% endif %}
                 </div>
             </div>
         </div>
@@ -119,18 +108,25 @@
             },
             data: {
                 pol: {{ points }},
-                currX: null,
-                currY: null,
-                prevX: null,
-                prevY: null,
+                currX: 0,
+                currY: 0,
+                prevX: 0,
+                prevY: 0,
                 last_point: null,
                 is_last_point: null,
                 testMsg: 'Hello',
                 state_msg: null,
-                for_save: false
+                for_save: false,
+                info_class: "text-danger"
             },
             computed: {},
             watch: {
+                pol() {
+                    this.info_class = this.pol.length < 4
+                        ? "text-danger"
+                        : "text-dark"
+
+                },
                 is_last_point(state) {
                     this.state_msg = state
                         ? "Укажите проверяемую точку"
@@ -139,12 +135,12 @@
             },
             methods: {
                 canvasPoint(event) {
-                    if (this.pol.length > 10 && !this.is_last_point) {
+                    if (this.pol.length > 9 && !this.is_last_point) {
                         this.state_msg = "Много точек!"
                         return null
                     }
                     let x = event.offsetX;
-                    let y = event.offsetY - 50;
+                    let y = event.offsetY;
                     this.vueCanvas.moveTo(x, y);
                     if (this.is_last_point) {
                         if (this.last_point != null)
