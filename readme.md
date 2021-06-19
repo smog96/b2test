@@ -12,5 +12,6 @@ $ docker-compose up -d --build
 
 [Админка](http://localhost:8000/admin/) - есть кнопка в списке полигонов
 
-username: admin
-password: admin
+**username**: admin
+
+**password**: admin
