@@ -8,15 +8,28 @@ from .utils import CoordsIterator
 log = logging.Logger(name='ext')
 
 
-class CreateUpdate(TemplateView):
+class PolygonViewBase(TemplateView):
     template_name = 'create_update.html'
-    extra_context = {
-        'polygon_list': Polygon.objects.all()
-    }
-    object = None
+
+    def post(self, request, *args, **kwargs):
+        coords = [x for x in CoordsIterator(request.POST.get("pol").split(','))]    # js отдает координаты в str
+        polygon = Polygon(
+            points=coords,
+            name=request.POST.get("polygon_name", "Undefined"),
+        )
+        if bool(request.POST.get('for_save')):
+            polygon.save()
+        return render(
+            request,
+            self.template_name,
+            self.get_context_data(
+                message=polygon.in_polygon(
+                    check_point=request.POST.get("last_point").split(',')))
+        )
 
     def setup(self, request, *args, **kwargs):
-        super(CreateUpdate, self).setup(request, *args, **kwargs)
+        super().setup(request, *args, **kwargs)
+        self.object = None
         if self.kwargs.get('id', None) is not None:
             self.object = get_object_or_404(
                 Polygon,
@@ -33,20 +46,13 @@ class CreateUpdate(TemplateView):
             context['points'] = []
         return context
 
-    def post(self, request, *args, **kwargs):
-        coords = [x for x in CoordsIterator(request.POST.get("pol").split(','))]
-        polygon = Polygon(
-            points=coords,
-            name=request.POST.get("polygon_name", "Undefined :0"),
-        )
-        if bool(request.POST.get('for_save')):
-            polygon.save()
-        last_point_coords = request.POST.get("last_point").split(',')
-        return render(
-            request,
-            self.template_name,
-            self.get_context_data(message=polygon.in_polygon(check_point=last_point_coords))
-        )
+
+class PolygonCreateView(PolygonViewBase):
+    pass
+
+
+class PolygonUpdateView(PolygonViewBase):
+    pass
 
 
 class PolygonList(ListView):
@@ -57,6 +63,8 @@ class PolygonList(ListView):
 
     def get_context_data(self, **kwargs):
         context = super(PolygonList, self).get_context_data()
+
+        # Добавление js_pols в контекст для vue.js для построение canvas
         context["js_pols"] = [
             {
                 'id': x.id,
